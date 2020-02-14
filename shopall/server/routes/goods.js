@@ -1,20 +1,8 @@
 var express = require("express");
 var router = express.Router();
-var mongoose = require("mongoose");
 var goods = require("../model/goods");
 
-
-mongoose.connect("mongodb://127.0.0.1:27017/demo")
-mongoose.connection.on("connected", () => {
-    console.log("mongodb connected success")
-})
-mongoose.connection.on("error", () => {
-  console.log("mongodb connected fail")
-})
-mongoose.connection.on("disconnected", () => {
-  console.log("mongodb connected disconnected")
-})
-router.get("/", (req, res, next) => {
+router.get("/list", (req, res, next) => {
   let sort = req.param("sort");
   let page = parseInt(req.param("page"))
   let priceLevel = req.param("priceLevel")
@@ -58,7 +46,7 @@ router.get("/", (req, res, next) => {
 
 })
 router.post("/addCart", (req,res,next) => {
-  let userid = 10086, productId = req.body.productId;
+  let userid = req.cookies.userId, productId = req.body.productId;
   let user = require('../model/user')
   user.findOne({ userId: userid }, (err,data) => {
     if (err) {
@@ -67,7 +55,6 @@ router.post("/addCart", (req,res,next) => {
         msg: err.message,
       })
     } else {
-      console.log(data)
       if (data) {
         goods.findOne({ productId: productId },(err1, date) => {
           if (err1) {
@@ -77,8 +64,6 @@ router.post("/addCart", (req,res,next) => {
             })
           } else {
             if (date) {
-              date.productNum = 1;
-              date.checked = 1;
               let obj = {
                 _id:date._id,
                 productId: date.productId,
@@ -89,7 +74,7 @@ router.post("/addCart", (req,res,next) => {
                 checked:1,
               }
               let index = data.cartList.findIndex((v) => {
-                    return v.checked
+                    return v.productId==date.productId
               })
               if (index ==-1) {
               data.cartList.push(obj)

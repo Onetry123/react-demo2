@@ -27,11 +27,10 @@ export default {
       axios.post("/goods/addCart",{
           productId:id
       }).then((res)=>{
-        console.log(res)
-        if(res.data.status==0){
-            alert("加入成功");
-        }else{
-            alert("msg"+res.msg)
+        if (res.data.status == "0") {
+            this.$emit('fn',0)
+        } else {
+            this.$emit('fn',1)
         }
       })
     }

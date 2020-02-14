@@ -7,6 +7,7 @@ import store from './store'
 import VueLazyload from 'vue-lazyload'
 import isFinite from 'vue-infinite-scroll'
 
+
 Vue.use(isFinite)
 Vue.use(store)
 Vue.use(VueLazyload, {

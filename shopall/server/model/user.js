@@ -17,4 +17,4 @@ var userSchema = new mongoose.Schema({
   "addressList": Array,
 
 });
-module.exports = mongoose.model("users", userSchema);
+module.exports = mongoose.model("users", userSchema,'users');
