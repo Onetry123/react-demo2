@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 let user = require('./../model/user')
+require('./../util/util');
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -80,7 +81,7 @@ router.get('/checkLogin', (req, res, next) => {
 router.post('/cartdel', (req, res, next) => {
   let userId = req.cookies.userId
   let productId = req.body.productId
-  user.update({
+  user.updateOne({
     userId: userId
   },
     {
@@ -111,7 +112,7 @@ router.post('/cartEdit', (req, res, next) => {
     checked = req.body.checked,
     productNum = req.body.productNum;
   console.log(req.body)
-  user.update({ 'userId': userId, "cartList.productId": productId }, {
+  user.updateOne({ 'userId': userId, "cartList.productId": productId }, {
     "cartList.$.productNum": productNum,
     "cartList.$.checked": checked
   }, (err, doc) => {
@@ -145,8 +146,128 @@ router.post('/checkAll', (req, res, next) => {
         data.cartList.forEach((item) => {
           item.checked = checked
         })
-        user.update({'userId':userId,'cartList':data.cartList},(err,doc)=>{})
+        user.updateOne({'userId':userId,'cartList':data.cartList},(err,doc)=>{})
       }
+    }
+  })
+})
+router.get('/address', (req, res, next) => {
+  let userId = req.cookies.userId;
+  user.findOne({ userId: userId }, (err, doc) => {
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result:''
+      })
+    } else {
+      res.json({
+        status: '0',
+        msg: '',
+        result: doc.addressList
+      })
+    }
+  })
+})
+router.post('/setdefault', (req, res, next) => {
+  let userId = req.cookies.userId,
+      addressId = req.body.addressId;
+  user.findOne({ userId: userId }, (err, data) => {
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result:''
+      })
+    } else {
+      let addressList = data.addressList;
+      addressList.forEach((item) => {
+        if (item.addressId == addressId) {
+          item.isDefault = true
+        } else {
+          item.isDefault = false
+        }
+      })
+      user.updateOne({ 'userId': userId, 'addressList': data.addressList }, (err, doc) => { })
+    }
+  })
+})
+router.post("/deladdress", (req,res,next) => {
+  let userId = req.cookies.userId,
+      addressId = req.body.addressId;
+  user.updateOne({
+    userId: userId
+  },
+    {
+      $pull: {
+        "addressList": {
+          'addressId': addressId
+        }
+      }
+    }, (err, data) => {
+      if (err) {
+        res.json({
+          status: '1',
+          msg: err.message,
+          result: '',
+        })
+      } else {
+        res.json({
+          status: '0',
+          msg: '',
+          result: '删除成功',
+        })
+      }
+  })
+})
+router.post('/payment', (req,res,next) => {
+  let userId = req.cookies.userId,
+    addressId = req.body.addressId,
+    orderTotal = req.body.orderTotal;
+  user.findOne({ userId: userId }, (err, doc) => {
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result:''
+      })
+    } else {
+      let key = doc.addressList.findIndex((item) => {
+        return item.addressId == addressId
+      })
+      let address = doc.addressList[key];
+      let userList=[]
+      doc.cartList.map((item) => {
+        if (item.checked == '1') {
+            userList.push(item)
+        }
+      })
+      let platform='622'
+      let r1 = Math.floor(Math.random() * 10);
+      let r2 = Math.floor(Math.random() * 10);
+      let sysData = new Date().Format('yyyyMMddhhmmss')
+      let createDate= new Date().Format('yyyy-MM-dd hh:mm:ss')
+      let orderId=platform+r1+sysData+r2
+      let order = {
+        orderId:orderId,
+        orderTotal: orderTotal,
+        addressInfo: address,
+        goodsList: userList,
+        orderStatus: '1',
+        createDate:createDate
+      }
+      doc.orderList.push(order)
+      user.updateOne({ 'userId': userId, 'ordeerList': doc.orderList }, (err, doc) => {
+        res.json({
+          status: '0',
+          msg: '',
+          result: {
+            orderId:order.orderId,
+            orderTotal:order.orderTotal,
+          }
+        })
+      })
+
     }
   })
 })

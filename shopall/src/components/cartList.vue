@@ -157,7 +157,7 @@
                 <span class="total-price">{{allPrice}}</span>
               </div>
               <div class="btn-wrap">
-                <a class="btn btn--red" :class="{'btn--dis':cheeckedCount==0}" @click='checkOut'>Checkout</a>
+                <a class="btn btn--red" :class="{'btn--dis':cheeckedCount==0}" @click='checkOut' >Checkout</a>
               </div>
             </div>
           </div>
